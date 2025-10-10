@@ -182,6 +182,10 @@
             background-color: rgba(76, 175, 80, 0.1);
             border-radius: var(--border-radius);
             word-break: break-word;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
         
         .speaker-btn {
@@ -581,6 +585,66 @@
             font-size: 18px;
         }
         
+        /* Chống sao chép và nhấp chuột phải trong màn hình làm bài */
+        .quiz-screen {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .quiz-screen * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .quiz-screen .option {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .quiz-screen .speaker-btn {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Cho phép chọn văn bản trong các màn hình khác */
+        .result-screen, .vocabulary-list, .review-menu, .main-menu, .grade-selection, .contact-screen, .auto-review-screen {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        .result-screen *, .vocabulary-list *, .review-menu *, .main-menu *, .grade-selection *, .contact-screen *, .auto-review-screen * {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        /* Thông báo chống gian lận */
+        .anti-cheat-notice {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+        
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -929,9 +993,16 @@
             </div>
             <button id="back-to-grade-from-result-btn" class="back-button">Quay lại chọn lớp</button>
         </div>
+        
+        <!-- Thông báo chống gian lận -->
+        <div id="anti-cheat-notice" class="anti-cheat-notice">
+            Không được sao chép trong khi làm bài!
+        </div>
     </div>
     
     <script>
+
+
         // Dữ liệu câu hỏi từ file Excel Unit 1 E4
         const grade4Unit1Questions = [
 { id: 1, word: "America", correct: "Mỹ", wrong1: "Pháp", wrong2: "Anh", wrong3: "Nga" },
@@ -7257,6 +7328,10 @@
     { id: 59, word: "to write", correct: "viết", wrong1: "cuốn, lên dây (cót)", wrong2: "ủng hộ, duy trì", wrong3: "rã đông" }
 ];
 
+    
+
+
+
         // Tổng hợp dữ liệu theo lớp
         const gradeData = {
             "E4": {
@@ -7506,6 +7581,9 @@
         const autoReviewEndButtons = document.getElementById('auto-review-end-buttons');
         const autoReviewAgainBtn = document.getElementById('auto-review-again-btn');
         const autoReviewBackBtn = document.getElementById('auto-review-back-btn');
+        
+        // Thông báo chống gian lận
+        const antiCheatNotice = document.getElementById('anti-cheat-notice');
 
         // Xử lý sự kiện chọn lớp
         grade4Btn.addEventListener('click', () => selectGrade('E4'));
@@ -8347,6 +8425,107 @@
             isComprehensiveTest = false;
             comprehensivePool = [];
             questionCountSelect.disabled = false;
+        }
+        
+        // Xử lý sự kiện chống sao chép trong màn hình làm bài
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ngăn chặn menu chuột phải trong màn hình làm bài
+            document.addEventListener('contextmenu', function(e) {
+                if (document.getElementById('quiz-screen').classList.contains('hidden') === false) {
+                    e.preventDefault();
+                    showAntiCheatNotice();
+                    return false;
+                }
+            });
+            
+            // Ngăn chặn sao chép trong màn hình làm bài
+            document.addEventListener('copy', function(e) {
+                if (document.getElementById('quiz-screen').classList.contains('hidden') === false) {
+                    e.preventDefault();
+                    showAntiCheatNotice();
+                    return false;
+                }
+            });
+            
+            // Ngăn chặn cắt trong màn hình làm bài
+            document.addEventListener('cut', function(e) {
+                if (document.getElementById('quiz-screen').classList.contains('hidden') === false) {
+                    e.preventDefault();
+                    showAntiCheatNotice();
+                    return false;
+                }
+            });
+            
+            // Ngăn chặn kéo thả trong màn hình làm bài
+            document.addEventListener('dragstart', function(e) {
+                if (document.getElementById('quiz-screen').classList.contains('hidden') === false) {
+                    e.preventDefault();
+                    showAntiCheatNotice();
+                    return false;
+                }
+            });
+            
+            // Ngăn chặn chọn văn bản trong màn hình làm bài
+            document.addEventListener('selectstart', function(e) {
+                if (document.getElementById('quiz-screen').classList.contains('hidden') === false) {
+                    // Cho phép chọn văn bản trong các nút và ô lựa chọn
+                    const target = e.target;
+                    if (target.closest('.option') || target.closest('.speaker-btn') || target.closest('.timer-container') || target.closest('.stats-container')) {
+                        return true;
+                    }
+                    e.preventDefault();
+                    showAntiCheatNotice();
+                    return false;
+                }
+            });
+            
+            // Ngăn chặn các phím tắt trong màn hình làm bài
+            document.addEventListener('keydown', function(e) {
+                if (document.getElementById('quiz-screen').classList.contains('hidden') === false) {
+                    // Ngăn chặn Ctrl+C, Ctrl+X, Ctrl+A
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'a')) {
+                        e.preventDefault();
+                        showAntiCheatNotice();
+                        return false;
+                    }
+                    
+                    // Ngăn chặn F12 (mở công cụ phát triển)
+                    if (e.key === 'F12') {
+                        e.preventDefault();
+                        showAntiCheatNotice();
+                        return false;
+                    }
+                    
+                    // Ngăn chặn Ctrl+Shift+I (mở công cụ phát triển)
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+                        e.preventDefault();
+                        showAntiCheatNotice();
+                        return false;
+                    }
+                    
+                    // Ngăn chặn Ctrl+Shift+J (mở console)
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+                        e.preventDefault();
+                        showAntiCheatNotice();
+                        return false;
+                    }
+                    
+                    // Ngăn chặn Ctrl+U (xem mã nguồn)
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                        e.preventDefault();
+                        showAntiCheatNotice();
+                        return false;
+                    }
+                }
+            });
+        });
+        
+        // Hiển thị thông báo chống gian lận
+        function showAntiCheatNotice() {
+            antiCheatNotice.style.display = 'block';
+            setTimeout(() => {
+                antiCheatNotice.style.display = 'none';
+            }, 2000);
         }
         
         // Khởi tạo ban đầu
